@@ -1,16 +1,13 @@
 const mongoose = require("mongoose");
 
-const patientSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
     name: String,
     email: String,
-    password: String,
     phone_no: String,
-    gender : String,
-    role : {type: String, default: "patient"},
-    img_url: String,
-    img_id: String,
+    password: String,
+    is_online: {type: Boolean, default: true},
     is_deleted: {type: Boolean, default: false},
-}, {collection: 'patient'});
+}, {collection: 'users'});
 
-const model = mongoose.model('Patient', patientSchema);
+const model = mongoose.model('User', userSchema);
 module.exports = model;

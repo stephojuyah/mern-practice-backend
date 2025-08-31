@@ -20,13 +20,6 @@ app.get ('/', (req,res) => {
 app.use(express.json());
 
 app.use('/auth', require('./routes/auth'))
-app.use('/profile', require('./routes/profile'))
-app.use('/bookings', require('./routes/bookings'))
-app.use('/feedback', require('./routes/feedback'))
-app.use('/admin', require('./routes/admin'))
-
-
-
 
 
 // Start server
