@@ -47,19 +47,19 @@ route.post('/login', async (req, res) => {
     const { email, password } = req.body; // Destructuring the request body
 
     if (!email || !password) {
-        return res.status(400).send({ 'status': 'Error', 'msg': 'all fields must be filled' });
+        return res.status(400).send({ 'status': 'error', 'msg': 'all fields must be filled' });
     }
     try {
         // check if user with that email exists in the database
         const user = await User.findOne({ email }, { password: 1, username: 1, email: 1, _id: 1, is_deleted: 1, is_online: 1 });
         // if user is not found, return error
         if (!user) {
-            return res.status(400).send({ 'status': 'Error', 'msg': 'Incorrect email' });
+            return res.status(400).send({ 'status': 'error', 'msg': 'Incorrect email' });
         }
 
 
         // check if password is correct
-        if (bcrypt.compare(password, user.password)) {
+        if (await bcrypt.compare(password, user.password)) {
             // generate jwt token
             const token = jwt.sign({
                 _id: user._id,
