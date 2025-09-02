@@ -83,7 +83,6 @@ route.post('/login', async (req, res) => {
 });
 
 
-
 route.post('/request_reset', async (req, res) => {
     const { email } = req.body;
 
@@ -94,25 +93,29 @@ route.post('/request_reset', async (req, res) => {
         if (!user) return res.status(404).send({ status: 'error', msg: 'User not found' });
 
         // generate 6-digit OTP
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otp = Math.floor(100000 + Math.random() * 900000);
 
         // generate token valid for 10 mins
         const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '10m' });
 
-        // save otp and token temporarily (you can add fields in your schema)
+        // save otp and token temporarily
         user.resetOtp = otp;
         user.resetToken = token;
         user.resetTokenExpires = Date.now() + 10 * 60 * 1000;
-        await user.save();
 
-        // send OTP via email
-        sendOTP(email, otp);
+        await user.save(); // important: persist the changes
 
-        res.status(200).send({ status: 'ok', msg: 'OTP sent', token });
+        // optionally send the OTP via email here
+        sendPasswordReset(email, otp);
+
+        return res.status(200).send({ status: 'ok', msg: 'Reset OTP sent', token });
+
     } catch (error) {
+        console.error(error);
         res.status(500).send({ status: 'error', msg: error.message });
-    }
+    }
 });
+
 
 route.post('/reset_password', async (req, res) => {
     const { email, token, otp, newPassword } = req.body;
