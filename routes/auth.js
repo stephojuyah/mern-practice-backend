@@ -11,7 +11,7 @@ require('dotenv').config();
 
 const User = require('../models/user');
 
-const {sendPasswordReset, sendOTP} = require('../utils/nodemailer')
+const { sendPasswordReset } = require('../utils/nodemailer')
 
 
 route.post('/register', async (req, res) => {
@@ -94,19 +94,21 @@ route.post('/request_reset', async (req, res) => {
 
         // generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000);
-
+        
         // generate token valid for 10 mins
         const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '10m' });
-
+        
         // save otp and token temporarily
         user.resetOtp = otp;
         user.resetToken = token;
         user.resetTokenExpires = Date.now() + 10 * 60 * 1000;
-
+        
         await user.save(); // important: persist the changes
-
+        
         // optionally send the OTP via email here
         sendPasswordReset(email, otp);
+        console.log("Sending email to:", email);
+        console.log(`OTP is:", ${otp}`);
 
         return res.status(200).send({ status: 'ok', msg: 'Reset OTP sent', token });
 

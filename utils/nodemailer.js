@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+require("dotenv").config();
 
 const sendPasswordReset = (email, otp) => {
     const transporter = nodemailer.createTransport({
@@ -18,3 +19,6 @@ const sendPasswordReset = (email, otp) => {
 
     return transporter.sendMail(mailOptions);
 };
+
+module.exports = { sendPasswordReset };
+
