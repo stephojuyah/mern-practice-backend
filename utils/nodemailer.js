@@ -7,6 +7,9 @@ const sendPasswordReset = (email, otp) => {
         auth: {
             user: process.env.EMAIL_USERNAME,
             pass: process.env.EMAIL_PASSWORD
+        },
+        tls: {
+            rejectUnauthorized: false // Allow self-signed certs (dev only)
         }
     });
 
@@ -21,4 +24,5 @@ const sendPasswordReset = (email, otp) => {
 };
 
 module.exports = { sendPasswordReset };
+
 
