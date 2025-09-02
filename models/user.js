@@ -7,6 +7,9 @@ const userSchema = new mongoose.Schema({
     password: String,
     is_online: {type: Boolean, default: true},
     is_deleted: {type: Boolean, default: false},
+    resetOtp: String,
+    resetToken: String,
+    resetTokenExpires: Date,
 }, {collection: 'users'});
 
 const model = mongoose.model('User', userSchema);

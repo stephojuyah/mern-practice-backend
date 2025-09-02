@@ -21,9 +21,9 @@ route.post('/register', async (req, res) => {
         return res.status(400).send({ "status": "error", "msg": "All field must be filled" });
     }
     try {
-        const found = await User.findOne({ username: username }, { username: 1, _id: 0 }).lean();
+        const found = await User.findOne({ email: email }, { email: 1, _id: 0 }).lean();
         if (found)
-            return res.status(400).send({ status: 'error', msg: `User with this username: ${username} already exists` });
+            return res.status(400).send({ status: 'error', msg: `User with this username: ${email} already exists` });
             
         const user = new User();
         user.name = name;
@@ -54,7 +54,7 @@ route.post('/login', async (req, res) => {
         const user = await User.findOne({ email }, { password: 1, username: 1, email: 1, _id: 1, is_deleted: 1, is_online: 1 });
         // if user is not found, return error
         if (!user) {
-            return res.status(400).send({ 'status': 'error', 'msg': 'Incorrect email' });
+            return res.status(400).send({ 'status': 'error', 'msg': 'User does not exist' });
         }
 
 
@@ -83,31 +83,67 @@ route.post('/login', async (req, res) => {
 });
 
 
-// forgot password endpoint
-route.post('/forgot_password', async (req,res)=>{
-    const {email, resetPasswordCode} = req.body;
 
-    if (!email || !resetPasswordCode){
-        return res.status(400).send({"status": "Error", "msg": "all fields must be filled"})
-    }
-    try{
-        // check if user with email passed exist
-        const user = await User.findOne({email:email})
+route.post('/request_reset', async (req, res) => {
+    const { email } = req.body;
 
-        // send reset password to email
-        sendPasswordReset(email, resetPasswordCode)
+    if (!email) return res.status(400).send({ status: 'error', msg: 'Email is required' });
 
-        return res.status(200).send({status: "success", msg: "Reset password request has been sent to " + email})
+    try {
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).send({ status: 'error', msg: 'User not found' });
 
-        
+        // generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // generate token valid for 10 mins
+        const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '10m' });
+
+        // save otp and token temporarily (you can add fields in your schema)
+        user.resetOtp = otp;
+        user.resetToken = token;
+        user.resetTokenExpires = Date.now() + 10 * 60 * 1000;
+        await user.save();
+
+        // send OTP via email
+        sendOTP(email, otp);
+
+        res.status(200).send({ status: 'ok', msg: 'OTP sent', token });
     } catch (error) {
-        console.error(error);
-        // Sending error response if something goes wrong
-        res.status(500).send({ "status": "some error occurred", "msg": error.message });
+        res.status(500).send({ status: 'error', msg: error.message });
+    }
+});
+
+route.post('/reset_password', async (req, res) => {
+    const { email, token, otp, newPassword } = req.body;
+
+    if (!email || !token || !otp || !newPassword) {
+        return res.status(400).send({ status: 'error', msg: 'All fields are required' });
     }
 
-     
-})
+    try {
+        const user = await User.findOne({ email });
+        if (!user || user.resetOtp !== otp || user.resetToken !== token || Date.now() > user.resetTokenExpires) {
+            return res.status(401).send({ status: 'error', msg: 'Invalid or expired token/OTP' });
+        }
+
+        // verify token
+        jwt.verify(token, process.env.JWT_SECRET);
+
+        // hash and update new password
+        user.password = await bcrypt.hash(newPassword, 10);
+        user.resetOtp = undefined;
+        user.resetToken = undefined;
+        user.resetTokenExpires = undefined;
+        await user.save();
+
+        res.status(200).send({ status: 'ok', msg: 'Password reset successful' });
+    } catch (error) {
+        res.status(500).send({ status: 'error', msg: error.message });
+    }
+});
+
+
 
 // endpont to logout
 route.post('/logout', async (req, res) => {
@@ -124,7 +160,7 @@ route.post('/logout', async (req, res) => {
         // update user document online status
         await User.updateOne({_id: user._id}, {is_online: false});
 
-        res.status(200).send({ 'status': 'success', 'msg': 'success' });       
+        res.status(200).send({ 'status': 'success', 'msg': 'You have successfully logged out' });       
     } catch (error) {
         console.error(error);
         if(error.name === 'JsonWebTokenError') {
