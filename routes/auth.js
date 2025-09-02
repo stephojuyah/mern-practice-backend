@@ -50,9 +50,8 @@ route.post('/login', async (req, res) => {
         return res.status(400).send({ 'status': 'error', 'msg': 'all fields must be filled' });
     }
     try {
-        // check if user with that email exists in the database
         const user = await User.findOne({ email }, { password: 1, username: 1, email: 1, _id: 1, is_deleted: 1, is_online: 1 });
-        // if user is not found, return error
+        
         if (!user) {
             return res.status(400).send({ 'status': 'error', 'msg': 'User does not exist' });
         }
@@ -98,17 +97,16 @@ route.post('/request_reset', async (req, res) => {
         // generate token valid for 10 mins
         const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '10m' });
         
-        // save otp and token temporarily
         user.resetOtp = otp;
         user.resetToken = token;
         user.resetTokenExpires = Date.now() + 10 * 60 * 1000;
         
-        await user.save(); // important: persist the changes
+        await user.save(); 
         
-        // optionally send the OTP via email here
+
         sendPasswordReset(email, otp);
-        console.log("Sending email to:", email);
-        console.log(`OTP is:", ${otp}`);
+        // console.log("Sending email to:", email);
+        // console.log(`OTP is:", ${otp}`);
 
         return res.status(200).send({ status: 'ok', msg: 'Reset OTP sent', token });
 
@@ -176,31 +174,6 @@ route.post('/logout', async (req, res) => {
     }
 });
 
-
- // endpoint to send otp
-route.post('/send_otp', async (req, res) => {
-    const {token, otp, email } = req.body; // Destructuring the request body
-
-    // Checking if any required field is missing
-    if (!token || !otp || !email ) {
-        return res.status(400).send({ status: "error", msg: "all fields must be filled" });
-    }
-
-    try {
-        // token verification
-        jwt.verify(token, process.env.JWT_SECRET);
-
-        // send otp
-        sendOTP(email, otp);
-
-        return res.status(200).send({status: 'ok', msg: 'success'});
-
-    } catch (error) {
-        console.error(error);
-        // Sending error response if something goes wrong
-        res.status(500).send({ status: "some error occurred", msg: error.message });
-    }
-});
 
 
 

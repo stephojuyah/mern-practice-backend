@@ -9,7 +9,7 @@ const sendPasswordReset = (email, otp) => {
             pass: process.env.EMAIL_PASSWORD
         },
         tls: {
-            rejectUnauthorized: false // Allow self-signed certs (dev only)
+            rejectUnauthorized: false 
         }
     });
 
