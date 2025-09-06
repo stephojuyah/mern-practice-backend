@@ -23,7 +23,7 @@ route.post('/register', async (req, res) => {
     try {
         const found = await User.findOne({ email: email }, { email: 1, _id: 0 }).lean();
         if (found)
-            return res.status(400).send({ status: 'error', msg: `User with this username: ${email} already exists` });
+            return res.status(400).send({ status: 'error', msg: `User with this email already exists` });
             
         const user = new User();
         user.name = name;
@@ -33,7 +33,7 @@ route.post('/register', async (req, res) => {
        
         await user.save();
 
-        return res.status(200).send({status: 'ok', msg: 'success', user});
+        return res.status(200).send({status: 'ok', msg: 'Registration successful', user});
 
     } catch (error) {
         console.error(error);
