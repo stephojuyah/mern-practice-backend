@@ -50,7 +50,7 @@ route.post('/login', async (req, res) => {
         return res.status(400).send({ 'status': 'error', 'msg': 'all fields must be filled' });
     }
     try {
-        const user = await User.findOne({ email }, { password: 1, username: 1, email: 1, _id: 1, is_deleted: 1, is_online: 1 });
+        const user = await User.findOne({ email }, { password: 1, name: 1, email: 1, _id: 1, is_deleted: 1, is_online: 1 });
         
         if (!user) {
             return res.status(400).send({ 'status': 'error', 'msg': 'User does not exist' });
@@ -73,7 +73,7 @@ route.post('/login', async (req, res) => {
             
             res.status(200).send({ 'status': 'Success', 'msg': 'You have successfully logged in', user, token });
         } else {
-            res.status(400).send({ 'status': 'error', 'msg': 'incorrect email or password' });
+            res.status(400).send({ 'status': 'error', 'msg': 'incorrect password' });
         }
     } catch (error) {
         console.error(error);
@@ -105,10 +105,8 @@ route.post('/request_reset', async (req, res) => {
         
 
         sendPasswordReset(email, otp);
-        // console.log("Sending email to:", email);
-        // console.log(`OTP is:", ${otp}`);
 
-        return res.status(200).send({ status: 'ok', msg: 'Reset OTP sent', token });
+        return res.status(200).send({ status: 'ok', msg: `A reset OTP has been sent to ${email}`, token });
 
     } catch (error) {
         console.error(error);
