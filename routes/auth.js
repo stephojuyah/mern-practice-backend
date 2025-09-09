@@ -117,9 +117,10 @@ route.post('/request_reset', async (req, res) => {
 
 
 route.post('/reset_password', async (req, res) => {
-    const { email, token, otp, newPassword } = req.body;
+    const { email, token, otp, newpassword } = req.body;
+    console.log(req.body)
 
-    if (!email || !token || !otp || !newPassword) {
+    if (!email || !token || !otp || !newpassword) {
         return res.status(400).send({ status: 'error', msg: 'All fields are required' });
     }
 
@@ -133,7 +134,7 @@ route.post('/reset_password', async (req, res) => {
         jwt.verify(token, process.env.JWT_SECRET);
 
         // hash and update new password
-        user.password = await bcrypt.hash(newPassword, 10);
+        user.password = await bcrypt.hash(newpassword, 10);
         user.resetOtp = undefined;
         user.resetToken = undefined;
         user.resetTokenExpires = undefined;
