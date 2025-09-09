@@ -47,14 +47,15 @@ route.post('/login', async (req, res) => {
     const { email, password } = req.body; // Destructuring the request body
 
     if (!email || !password) {
-        return res.status(400).send({ 'status': 'error', 'msg': 'all fields must be filled' });
+        return res.status(400).send({ status: 'error', msg: 'all fields must be filled' });
     }
     try {
-        const user = await User.findOne({ email }, { password: 1, name: 1, email: 1, _id: 1, is_deleted: 1, is_online: 1 });
+        const user = await User.findOne({ email } ,{ password: 1, name: 1, email: 1, _id: 1, is_deleted: 1, is_online: 1 });
         
-        if (!user) {
-            return res.status(400).send({ 'status': 'error', 'msg': 'User does not exist' });
+        if (!user || user == undefined) {
+            return res.status(400).send({ status: 'error', msg: 'User does not exist' });
         }
+
 
 
         // check if password is correct
@@ -71,13 +72,13 @@ route.post('/login', async (req, res) => {
             user.is_online = true;
             await user.save();
             
-            res.status(200).send({ 'status': 'Success', 'msg': 'You have successfully logged in', user, token });
+            res.status(200).send({ status: 'Success', msg: 'You have successfully logged in', user, token });
         } else {
-            res.status(400).send({ 'status': 'error', 'msg': 'incorrect password' });
+            res.status(400).send({ status: 'error', msg: 'incorrect password' });
         }
     } catch (error) {
         console.error(error);
-        res.status(500).send({ "status": "some error occurred", "msg": error.message });
+        res.status(500).send({ status: "some error occurred", msg: error.message });
     }
 });
 
