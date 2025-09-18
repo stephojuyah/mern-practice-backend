@@ -72,7 +72,7 @@ route.post('/login', async (req, res) => {
             user.is_online = true;
             await user.save();
             
-            res.status(200).send({ status: 'Success', msg: 'You have successfully logged in', user, token });
+            res.status(200).send({ status: 'Success', msg: 'Login successful', user, token });
         } else {
             res.status(400).send({ status: 'error', msg: 'incorrect password' });
         }
@@ -118,7 +118,7 @@ route.post('/request_reset', async (req, res) => {
 
 route.post('/reset_password', async (req, res) => {
     const { email, token, otp, newpassword } = req.body;
-    console.log(req.body)
+    // console.log(req.body)
 
     if (!email || !token || !otp || !newpassword) {
         return res.status(400).send({ status: 'error', msg: 'All fields are required' });
