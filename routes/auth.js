@@ -176,23 +176,32 @@ route.post('/logout', async (req, res) => {
 
 // endpoint to delete account
 route.delete('/delete_account', async (req, res) => {
-  const { token } = req.body;
+    const { token } = req.body;
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); // validate token
-    const userId = decoded.id;
-
-    const deletedUser = await User.findByIdAndDelete(userId);
-
-    if (!deletedUser) {
-      return res.status(404).send({ status: 'error', msg: 'User not found' });
+    if (!token) {
+        return res.status(400).send({ status: 'error', msg: 'Token is required' });
     }
 
-    res.status(200).send({ status: 'ok', msg: 'Account deleted successfully' });
-  } catch (error) {
-    console.error('Delete error:', error);
-    res.status(500).send({ status: 'error', msg: 'Failed to delete account' });
-  }
+    try {
+        // token authentication
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const userId = decoded._id; // Changed from decoded.id to decoded._id
+
+        // delete user from database
+        const deletedUser = await User.findByIdAndDelete(userId);
+
+        if (!deletedUser) {
+            return res.status(404).send({ status: 'error', msg: 'User not found' });
+        }
+
+        res.status(200).send({ status: 'ok', msg: 'Account deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(400).send({ status: 'error', msg: 'Token verification failed' });
+        }
+        res.status(500).send({ status: 'error', msg: error.message });
+    }
 });
 
 
